@@ -15,10 +15,10 @@ class RimplenetGetUser
         return ob_get_clean();
     }
 
-    public function get_users($access_token = null, $user_id = null, $page = 1, $users_per_page = 10)
+    public function get_users($access_token = null, $user_id = null, $page = 1, $users_per_page = 25)
     {
 
-        $this->validate($access_token);
+        // $this->validate($access_token);
 
 
         if ($access_token == null) {
@@ -61,7 +61,8 @@ class RimplenetGetUser
             $data = [
                 'others' => [
                     'totalPages' => $total_pages,
-                    'currentPage' => intval($page)
+                    'currentPage' => intval($page),
+                    'totalUsers' => $total_users
                 ],
                 'users' => $users
             ];
@@ -72,7 +73,7 @@ class RimplenetGetUser
             
             do_action('rimplenet_hooks_and_monitors_on_started', $action='rimplenet_get_users', $auth=null ,$request);
 
-            return $this->pageResponse(200, true, "User retrieved successfully", $data, []);
+            return $this->pageResponse(200, true, "User(s) retrieved successfully", $data, []);
 
         } else {
 
@@ -175,7 +176,8 @@ class RimplenetGetUser
             "data" => [
                 "others" => [
                     "totalPages" => $data["others"]["totalPages"],
-                    "currentPage" => $data["others"]["currentPage"]
+                    "currentPage" => $data["others"]["currentPage"],
+                    "totalUsers" => $data["others"]["totalUsers"],
                 ],
                 "users" => $data["users"]
             ],
@@ -196,7 +198,7 @@ class RimplenetGetUser
 
     public function authorization($caller_id)
     {
-      return true;
+        return true;
         $user = get_user_by('ID', $caller_id);
 
         if (user_can($user, 'administrator')) {
