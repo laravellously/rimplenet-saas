@@ -15,89 +15,36 @@ class RimplenetCreateUser
         return ob_get_clean();
     }
 
-    public function create_user($user_email, $user_login, $user_pass, $metas=[], $access_token = null)
+    public function create_user($user_email, $user_login, $user_pass, $metas=[])
     {
         
         $validation = $this->validate($user_email, $user_login, $user_pass);
-
-        if ($access_token == null) {
-
-            if(!$this->authorization(get_current_user_id())) return $this->response(403, "failed", "Permission denied", [], ["unauthorize"=>"caller_id is not authorized"]);
-    
-            if(!empty($this->validation_error)) return $this->response(400, "failed", "Validation error", [], $this->validation_error);
+        if(!empty($this->validation_error)) return $this->response(400, "failed", "Validation error", [], $this->validation_error);
             
-            if (empty($this->validation_error)) {
-    
-                $request = [
-                    "user_email" => $user_email,
-                    "user_login" => $user_login,
-                    "user_password" => $user_pass,
-                    "metas" => $metas
-                ];
-                
-                do_action('rimplenet_hooks_and_monitors_on_started', $action='rimplenet_create_users', $auth=null ,$request);
+        if (empty($this->validation_error)) {
 
-                $new_user = wp_insert_user(['user_email'=>$user_email, 'user_login'=>$user_login, 'user_pass'=>$user_pass]);
-    
-                if(!empty($metas)) {
+            $request = [
+                "user_email" => $user_email,
+                "user_login" => $user_login,
+                "user_password" => $user_pass,
+                "metas" => $metas
+            ];
+            
+            do_action('rimplenet_hooks_and_monitors_on_started', $action='rimplenet_create_users', $auth=null ,$request);
+
+            $new_user = wp_insert_user(['user_email'=>$user_email, 'user_login'=>$user_login, 'user_pass'=>$user_pass]);
+
+            if(!empty($metas)) {
+                
+                foreach($metas as $meta_key=>$meta_value) {
                     
-                    foreach($metas as $meta_key=>$meta_value) {
-                        
-                        add_user_meta($new_user, $meta_key, $meta_value);
-                    }
-    
+                    add_user_meta($new_user, $meta_key, $meta_value);
                 }
-    
-                return $this->response(201, true, "User created successfully", ["id"=>$new_user], $this->validation_error);
-            
-                
-            }
-
-        } else {
-
-            try {
-
-                $user_access_token = JWT::decode($access_token);
-                $id = json_decode($user_access_token)->user->id;
-                
-                if ($user_access_token === "Expired token") {
-                    return $this->response(400, "failed", "Validation error", [], ["Expired token"]);
-                } elseif ($user_access_token === "Invalid signature") {
-                    return $this->response(400, "failed", "Validation error", [], ["Invalid signature"]);
-                } elseif ($user_access_token) {
-                    if(!$this->authorization($id)) return $this->response(403, "failed", "Permission denied", [], ["unauthorize"=>"Request is not authorized", "id" =>  json_decode($user_access_token)->user->id]);
-
-                    if(!empty($this->validation_error)) return $this->response(400, "failed", "Validation error", [], $this->validation_error);
-            
-                    if (empty($this->validation_error)) {
-            
-            
-                        $new_user = wp_insert_user(['user_email'=>$user_email, 'user_login'=>$user_login, 'user_pass'=>$user_pass]);
-            
-                        if(!empty($metas)) {
-                            
-                            foreach($metas as $meta_key=>$meta_value) {
-                                
-                                update_user_meta($new_user, $meta_key, $meta_value);
-                            }
-            
-                        }
-            
-                        return $this->response(201, true, "User created successfully", ["id"=>$new_user], $this->validation_error);
-                    
-                        
-                    }
-                }
-
-            } catch (Exception $ex) {
-                
-                return $ex->getMessage();
-                return $this->response(400, "failed", "Validation error", [], [$ex->getMessage()]);
 
             }
 
+            return $this->response(201, true, "User created successfully", ["id"=>$new_user], $this->validation_error);
         }
-        
 
     }
 

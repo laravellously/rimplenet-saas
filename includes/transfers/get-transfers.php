@@ -15,7 +15,7 @@ class RimplenetGetTransfers extends Transfers
             $this->query = new WP_Query([
                 'post_type' => self::POST_TYPE,
                 'post_status' => 'publish',
-                'posts_per_page' => Utils::LIMIT,
+                'posts_per_page' => -1,
                 'paged' => $page ?? 1,
                 'tax_query' => array([
                     'taxonomy' => self::TAXONOMY,
